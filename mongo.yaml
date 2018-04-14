@@ -25,6 +25,32 @@ spec:
       storage: 500Mi
 ---
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongoconfig
+spec:
+  capacity:
+    storage: 500Mi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce  
+  storageClassName: standard
+  hostPath:
+    path: /config 
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mongoconfigpvc
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: mongo
@@ -55,11 +81,16 @@ spec:
       - name: mongo
         image: mongo
         volumeMounts:
-        - mountPath: "/data"
+        - mountPath: "/data/db"
           name: mongopvc
+        - mountPath: "/data/configdb"
+          name: mongoconfigpvc
         ports:
         - containerPort: 27017        
       volumes:
         - name: mongopvc
           persistentVolumeClaim:
             claimName: mongopvc
+        - name: mongoconfigpvc
+          persistentVolumeClaim:
+            claimName: mongoconfigpvc
